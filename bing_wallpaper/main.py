@@ -4,9 +4,8 @@
 __author__ = 'shaw'
 
 import os
-import urllib.request
-
 import requests
+import urllib.request
 
 BASE_URL = 'https://www.bing.com'
 IMAGE_ARCHIVE_URL = BASE_URL + '/HPImageArchive.aspx?idx=0&n=1&format=js'
@@ -16,6 +15,7 @@ HEADERS = {
 WALLPAPER_PATH = 'C:/Users/yshaw/Desktop/wallpaper/'
 HEXO_CWD = 'D:/ProgramData/hexo'
 CWD_CMD = ' --cwd ' + HEXO_CWD
+HEXO_CONFIG = 'D:/ProgramData/hexo/themes/landscape/_config.yml'
 
 
 def handle_hexo(image, image_url):
@@ -69,6 +69,19 @@ def handle_hexo(image, image_url):
     md_file.writelines('![' + copyright + '](' + image_url + ')\n')
     md_file.close()
 
+    # 更新banner
+    config = open(HEXO_CONFIG, mode='r', encoding='UTF-8')
+    config_lines = config.readlines()
+    config = open(HEXO_CONFIG, mode='w+', encoding='UTF-8')
+    for line in config_lines:
+        if line.startswith('banner: '):
+            config.writelines('banner: \"' + image_url + '\"\n')
+        else:
+            config.writelines(line)
+    config.close()
+
+    cmd_clean = 'hexo clean'
+    os.system(cmd_clean + CWD_CMD)
     # 生成html，部署到git
     # cmd_generate = 'hexo generate'
     cmd_generate = 'hexo generate --deploy'
