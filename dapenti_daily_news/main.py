@@ -9,6 +9,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+
 BASE_URL = 'http://www.dapenti.com/blog/'
 EXCLUDES_P = [
     '以下内容，有可能',
@@ -221,21 +222,16 @@ def handle_hexo(full_title, url, lines):
     md_file = open(md_file_path, mode='w+', encoding='UTF-8')
     # 写入现有内容
     for line in front_matter:
-        if line.startswith('tags:'):
+        if line.startswith('title:'):
+            md_file.writelines('title: %s\n' % summary)
+        elif line.startswith('tags:'):
             # 添加标签和封面图
-            md_file.writelines('tags: \n')
-            # md_file.writelines('index_img: ' + INDEX_AND_BANNER_IMG + '\n')
-            # md_file.writelines('banner_img: ' + INDEX_AND_BANNER_IMG + '\n')
-        elif line.startswith('category:'):
-            # 分类
-            md_file.writelines('category:\n')
-            md_file.writelines('    - 爬虫\n')
-            md_file.writelines('    - 喷嚏图卦\n')
+            md_file.writelines('tags: 喷嚏图卦\n')
         else:
             md_file.writelines(line)
     # 写入文章
     md_file.writelines('\n')
-    md_file.writelines(summary + '\n')
+    md_file.writelines(title_rename + '\n')
     md_file.writelines('\n')
     md_file.writelines('<!-- more -->\n')
     md_file.writelines('\n')
@@ -246,9 +242,9 @@ def handle_hexo(full_title, url, lines):
     md_file.close()
 
     # 生成html，部署到git
-    # cmd_generate = 'hexo generate'
-    cmd_generate = 'hexo generate --deploy'
-    os.system(cmd_generate + cwd_cmd)
+    cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
+    # cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
+    os.system(cmd_generate)
 
 
 if __name__ == '__main__':
