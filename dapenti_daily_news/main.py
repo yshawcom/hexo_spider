@@ -207,6 +207,8 @@ def handle_hexo(full_title, url, lines):
     index = full_title.index('】')
     summary = full_title[index + 1:]
     title_rename = full_title[1:index]
+    post_date = full_title[5:index]
+    full_url = BASE_URL + url
 
     cwd_cmd = ' --cwd ' + HEXO_CWD
     md_file_path = '%s/source/_posts/%s.md' % (HEXO_CWD, title_rename)
@@ -227,6 +229,7 @@ def handle_hexo(full_title, url, lines):
         elif line.startswith('tags:'):
             # 添加标签和封面图
             md_file.writelines('tags: 喷嚏图卦\n')
+            md_file.writelines('permalink: /post/dapenti/%s/\n' % post_date)
         else:
             md_file.writelines(line)
     # 写入文章
@@ -238,12 +241,12 @@ def handle_hexo(full_title, url, lines):
     # 写入正文
     for line in lines:
         md_file.writelines(line)
-    md_file.writelines('> 本文转载自 [www.dapenti.com 铂程斋 喷嚏图卦](' + BASE_URL + url + ')\n')
+    md_file.writelines('> 本文转载自 铂程斋 喷嚏图卦 [%s](%s)\n' % (full_url, full_url))
     md_file.close()
 
     # 生成html，部署到git
-    cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
-    # cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
+    # cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
+    cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
     os.system(cmd_generate)
 
 
