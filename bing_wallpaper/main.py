@@ -3,10 +3,8 @@
 
 __author__ = 'shaw'
 
-import datetime
 import os
 import urllib.request
-from datetime import datetime
 
 import requests
 
@@ -27,49 +25,33 @@ def handle_hexo(image, image_url):
     """
     hexo博客
     """
-    start_date = datetime.strptime(image['startdate'], "%Y%m%d")
-    _y_m_d = start_date.strftime('%Y.%m.%d')
     title = image['title'].replace('?', '？')
     copyright = image['copyright']
-    copyrightlink = image['copyrightlink']
 
     md_file = open(POST_FILE, mode='r', encoding='utf-8')
     md_file_lines = md_file.readlines()
     md_file = open(POST_FILE, mode='w+', encoding='utf-8')
     for line in md_file_lines:
-        if line.startswith('<!-- more -->'):
-            pass
-        elif line.startswith('微软 bing 每日壁纸图片。'):
-            md_file.writelines('微软 bing 每日壁纸图片。\n')
-            md_file.writelines('\n### %s %s\n' % (_y_m_d, title))
-            md_file.writelines('\n[%s](%s)\n' % (copyright, copyrightlink))
-            md_file.writelines('\n![%s](%s)\n' % (copyright, image_url))
-            md_file.writelines('\n<!-- more -->\n')
-            if start_date.day == 1:
-                last_month_last_day = start_date - datetime.timedelta(days=1)
-                md_file.writelines('\n## %s\n' % last_month_last_day.strftime('%Y.%m'))
+        if line.startswith('cover:'):
+            # 封面
+            md_file.writelines('cover: %s\n' % image_url)
+        elif line.startswith('thumbnail:'):
+            # 缩略图
+            md_file.writelines('thumbnail: %s\n' % image_url)
+        elif line.startswith('<!-- title -->'):
+            # 标题
+            md_file.writelines('<!-- title -->%s\n' % title)
+        elif line.startswith('<div class="justified-gallery">'):
+            # 画廊
+            md_file.writelines('<div class="justified-gallery">\n')
+            md_file.writelines('\n![%s](%s)' % (copyright, image_url))
         else:
             md_file.writelines(line)
     md_file.close()
 
-    r"""
-    # 更新banner
-    config = open(HEXO_CONFIG, mode='r', encoding='UTF-8')
-    config_lines = config.readlines()
-    config = open(HEXO_CONFIG, mode='w+', encoding='UTF-8')
-    for line in config_lines:
-        if line.startswith('banner:'):
-            config.writelines('banner: \"' + image_url + '\"\n')
-        elif line.startswith('subtitle:'):
-            config.writelines('subtitle: \"' + title + '\"\n')
-        else:
-            config.writelines(line)
-    config.close()
-    """
-
     # 生成html，部署到git
-    # cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
-    cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
+    cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
+    # cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
     os.system(cmd_generate)
 
 
