@@ -5,6 +5,7 @@
 import logging
 import os
 import re
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -22,6 +23,7 @@ EXCLUDES_P = [
 EXCLUDES_TAGS = ['table', 'span', 'br', 'hr', 'script', 'ins']
 HEXO_CWD = 'D:/ProgramData/hexo'
 INDEX_AND_BANNER_IMG = ''
+INDEX_MD = HEXO_CWD + '/source/_posts/dapenti/index.md'
 
 
 def handle_list_page():
@@ -205,16 +207,19 @@ def handle_hexo(full_title, url, lines):
     :return:
     """
     index = full_title.index('】')
-    summary = full_title[index + 1:]
+    title = full_title[index + 1:]
     title_rename = full_title[1:index]
-    post_date = full_title[5:index]
-    full_url = BASE_URL + url
+    date_ymd_str = full_title[5:index]
+    ori_url = BASE_URL + url
+    permalink = '/dapenti/%s/' % date_ymd_str
+    date_ymd = datetime.strptime(date_ymd_str, "%Y%m%d")
+    date_y_m_d = date_ymd.strftime('%Y.%m.%d')
 
     cwd_cmd = ' --cwd ' + HEXO_CWD
-    md_file_path = '%s/source/_posts/%s.md' % (HEXO_CWD, title_rename)
+    md_file_path = '%s/source/_posts/dapenti/%s.md' % (HEXO_CWD, date_ymd_str)
 
     # 新建博文
-    cmd_new = 'hexo new "%s" --replace' % title_rename
+    cmd_new = 'hexo new --path dapenti/%s "%s" --replace' % (date_ymd_str, date_ymd_str)
     os.system(cmd_new + cwd_cmd)
 
     # 读取md现有内容
@@ -225,11 +230,14 @@ def handle_hexo(full_title, url, lines):
     # 写入现有内容
     for line in front_matter:
         if line.startswith('title:'):
-            md_file.writelines('title: %s\n' % summary)
+            md_file.writelines('title: %s\n' % title)
+        # elif line.startswith('category:'):
+        #     md_file.writelines('category: 喷嚏图卦\n')
         elif line.startswith('tags:'):
             # 添加标签和封面图
-            md_file.writelines('tags: 喷嚏图卦\n')
-            md_file.writelines('permalink: /post/dapenti/%s/\n' % post_date)
+            md_file.writelines('tags:\n')
+            md_file.writelines('permalink: %s\n' % permalink)
+            md_file.writelines('hidden: true\n')
         else:
             md_file.writelines(line)
     # 写入文章
@@ -241,12 +249,28 @@ def handle_hexo(full_title, url, lines):
     # 写入正文
     for line in lines:
         md_file.writelines(line)
-    md_file.writelines('> 本文转载自 铂程斋 喷嚏图卦 [%s](%s)\n' % (full_url, full_url))
+    md_file.writelines('> 本文转载自 铂程斋 [%s](%s)\n' % (full_title, ori_url))
     md_file.close()
 
+    # 列表页
+    index_md = open(INDEX_MD, mode='r', encoding='utf-8')
+    index_md_lines = index_md.readlines()
+    index_md = open(INDEX_MD, mode='w+', encoding='utf-8')
+    for line in index_md_lines:
+        if line.startswith('<!-- today -->'):
+            index_md.writelines('<!-- today -->\n')
+            index_md.writelines('\n')
+            index_md.writelines('* %s [%s](%s)\n' % (date_y_m_d, title, permalink))
+            index_md.writelines('<!-- more -->\n')
+        elif line.startswith('<!-- more -->'):
+            pass
+        else:
+            index_md.writelines(line)
+    index_md.close()
+
     # 生成html，部署到git
-    # cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
-    cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
+    cmd_generate = 'D: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate'
+    # cmd_generate = 'd: && cd ' + HEXO_CWD + ' && hexo clean && hexo generate --deploy'
     os.system(cmd_generate)
 
 
